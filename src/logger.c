@@ -13,6 +13,7 @@
 #include "flash_eep.h"
 #include "logger.h"
 #include "ble.h"
+#include "trigger.h"
 
 #define MEMO_SEC_COUNT		((FLASH_ADDR_END_MEMO - FLASH_ADDR_START_MEMO) / FLASH_SECTOR_SIZE) // 49 sectors
 #define MEMO_SEC_RECS		((FLASH_SECTOR_SIZE-sizeof(memo_head_t))/sizeof(memo_blk_t)) // -  sector: 409 records
@@ -27,6 +28,7 @@ typedef struct _summ_data_t {
 	uint32_t	battery_mv; // mV
 	int32_t		temp; // x 0.01 C
 	uint32_t	humi; // x 0.01 %
+	uint32_t    relayStatus;
 	uint32_t 	count;
 } summ_data_t;
 RAM summ_data_t summ_data;
@@ -160,11 +162,23 @@ void write_memo(void) {
 	memo_blk_t mblk;
 	if (cfg.averaging_measurements == 1) {
 		mblk.temp = measured_data.temp;
-		mblk.humi = measured_data.humi;
+		mblk.humi = measured_data.humi_x1;
+
+		if (trg.flg_byte & 0x01) {
+			mblk.relayStatus = 1;
+		} else {
+			mblk.relayStatus = 0;
+		}
+
 		mblk.vbat = measured_data.average_battery_mv;
 	} else {
 		summ_data.temp += measured_data.temp;
 		summ_data.humi += measured_data.humi;
+
+		if (trg.flg_byte & 0x01) {
+			summ_data.relayStatus += 1;
+		}
+
 		summ_data.battery_mv += measured_data.average_battery_mv;
 		summ_data.count++;
 		if (cfg.averaging_measurements > summ_data.count)
@@ -172,7 +186,8 @@ void write_memo(void) {
 		if(ble_connected && bls_pm_getSystemWakeupTick() - clock_time() < 125*CLOCK_16M_SYS_TIMER_CLK_1MS)
 			return;
 		mblk.temp = (int16_t)(summ_data.temp/(int32_t)summ_data.count);
-		mblk.humi = (uint16_t)(summ_data.humi/summ_data.count);
+		mblk.humi = (uint8_t)((summ_data.humi/summ_data.count + 50) / 100);
+		mblk.relayStatus = (uint8_t)summ_data.relayStatus;
 		mblk.vbat = (uint16_t)(summ_data.battery_mv/summ_data.count);
 		memset(&summ_data, 0, sizeof(summ_data));
 	}

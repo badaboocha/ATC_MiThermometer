@@ -18,6 +18,7 @@
 #include "lcd.h"
 #include "ble.h"
 #include "battery.h"
+#include "trigger.h"
 
 //RAM uint8_t show_stage; // count/stage update lcd code buffer
 //RAM uint32_t chow_ext_sec; // count show validity time, in sec
@@ -159,18 +160,33 @@ void lcd(void) {
 #endif
 			} else {
 #if	(DEVICE_TYPE != DEVICE_CGDK2)
+				/*
 				if (cfg.flg.comfort_smiley) { // comfort on
 					show_smiley(is_comfort(measured_data.temp, measured_data.humi));
 				} else
-					show_smiley(cfg.flg2.smiley);
+					show_smiley(cfg.flg2.smiley); */
+				if (trg.flg_byte & 0x01)	{
+					show_smiley(SMILE_HAPPY);
+				}
+				else {
+					show_smiley(SMILE_SAD);
+				}
 #endif
 			}
 		} else {
 #if	(DEVICE_TYPE != DEVICE_CGDK2)
+			/*
 			if (cfg.flg.comfort_smiley) { // comfort on
 				show_smiley(is_comfort(measured_data.temp, measured_data.humi));
 			} else
-				show_smiley(cfg.flg2.smiley);
+				show_smiley(cfg.flg2.smiley); */
+			if (trg.flg_byte & 0x01)	{
+				show_smiley(SMILE_HAPPY);
+			}
+			else {
+				show_smiley(SMILE_SAD);
+			}
+
 #endif
 		}
 		if (set_small_number_and_bat) {
