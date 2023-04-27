@@ -124,6 +124,14 @@ void lcd(void) {
 #if	USE_CLOCK
 			if (cfg.flg.show_time_smile && (lcd_flg.show_stage & 2)) {
 				show_clock(); // stage clock
+				if (trg.flg_byte & 0x01)	{
+					show_smiley(SMILE_HAPPY);
+				}
+				else {
+#if	(DEVICE_TYPE != DEVICE_CGDK2)
+					show_smiley(0);
+#endif
+				}
 				show_ble_symbol(_ble_con);
 				return;
 			}
@@ -134,10 +142,19 @@ void lcd(void) {
 				|| measured_data.battery_level <= 15
 #endif
 				) { // Battery
-#if	(DEVICE_TYPE != DEVICE_CGDK2)
-				show_smiley(0); // stage show battery
-#endif
+//#if	(DEVICE_TYPE != DEVICE_CGDK2)
+//				show_smiley(0); // stage show battery
+//#endif
 				show_battery_symbol(1);
+
+				if (trg.flg_byte & 0x01)	{
+					show_smiley(SMILE_HAPPY);
+				}
+				else {
+#if	(DEVICE_TYPE != DEVICE_CGDK2)
+					show_smiley(0);
+#endif
+				}
 #if	(DEVICE_TYPE == DEVICE_CGG1) || (DEVICE_TYPE == DEVICE_CGDK2)
 #if DEVICE_TYPE == DEVICE_CGG1
 				show_batt_cgg1();
@@ -169,7 +186,7 @@ void lcd(void) {
 					show_smiley(SMILE_HAPPY);
 				}
 				else {
-					show_smiley(SMILE_SAD);
+					show_smiley(0);
 				}
 #endif
 			}
@@ -184,7 +201,7 @@ void lcd(void) {
 				show_smiley(SMILE_HAPPY);
 			}
 			else {
-				show_smiley(SMILE_SAD);
+				show_smiley(0);
 			}
 
 #endif
